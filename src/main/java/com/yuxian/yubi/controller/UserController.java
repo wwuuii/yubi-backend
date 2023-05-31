@@ -9,28 +9,17 @@ import com.yuxian.yubi.common.ResultUtils;
 import com.yuxian.yubi.constant.UserConstant;
 import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.exception.ThrowUtils;
-import com.yuxian.yubi.model.dto.user.UserAddRequest;
-import com.yuxian.yubi.model.dto.user.UserLoginRequest;
-import com.yuxian.yubi.model.dto.user.UserQueryRequest;
-import com.yuxian.yubi.model.dto.user.UserRegisterRequest;
-import com.yuxian.yubi.model.dto.user.UserUpdateMyRequest;
-import com.yuxian.yubi.model.dto.user.UserUpdateRequest;
+import com.yuxian.yubi.model.dto.user.*;
 import com.yuxian.yubi.model.entity.User;
 import com.yuxian.yubi.model.vo.LoginUserVO;
-import com.yuxian.yubi.model.vo.UserVO;
 import com.yuxian.yubi.service.UserService;
-import java.util.List;
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * 用户接口
@@ -196,19 +185,6 @@ public class UserController {
         return ResultUtils.success(user);
     }
 
-    /**
-     * 根据 id 获取包装类
-     *
-     * @param id
-     * @param request
-     * @return
-     */
-    @GetMapping("/get/vo")
-    public BaseResponse<UserVO> getUserVOById(long id, HttpServletRequest request) {
-        BaseResponse<User> response = getUserById(id, request);
-        User user = response.getData();
-        return ResultUtils.success(userService.getUserVO(user));
-    }
 
     /**
      * 分页获取用户列表（仅管理员）
@@ -226,31 +202,6 @@ public class UserController {
         Page<User> userPage = userService.page(new Page<>(current, size),
                 userService.getQueryWrapper(userQueryRequest));
         return ResultUtils.success(userPage);
-    }
-
-    /**
-     * 分页获取用户封装列表
-     *
-     * @param userQueryRequest
-     * @param request
-     * @return
-     */
-    @PostMapping("/list/page/vo")
-    public BaseResponse<Page<UserVO>> listUserVOByPage(@RequestBody UserQueryRequest userQueryRequest,
-            HttpServletRequest request) {
-        if (userQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
-        long current = userQueryRequest.getCurrent();
-        long size = userQueryRequest.getPageSize();
-        // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-        Page<User> userPage = userService.page(new Page<>(current, size),
-                userService.getQueryWrapper(userQueryRequest));
-        Page<UserVO> userVOPage = new Page<>(current, size, userPage.getTotal());
-        List<UserVO> userVO = userService.getUserVO(userPage.getRecords());
-        userVOPage.setRecords(userVO);
-        return ResultUtils.success(userVOPage);
     }
 
     // endregion

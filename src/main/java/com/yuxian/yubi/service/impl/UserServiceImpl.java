@@ -1,9 +1,6 @@
 package com.yuxian.yubi.service.impl;
 
-import static com.yuxian.yubi.constant.UserConstant.USER_LOGIN_STATE;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuxian.yubi.common.ErrorCode;
 import com.yuxian.yubi.constant.CommonConstant;
@@ -16,15 +13,15 @@ import com.yuxian.yubi.model.vo.LoginUserVO;
 import com.yuxian.yubi.model.vo.UserVO;
 import com.yuxian.yubi.service.UserService;
 import com.yuxian.yubi.utils.SqlUtils;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
+
+import javax.servlet.http.HttpServletRequest;
+
+import static com.yuxian.yubi.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户服务实现
@@ -204,13 +201,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userVO;
     }
 
-    @Override
-    public List<UserVO> getUserVO(List<User> userList) {
-        if (CollectionUtils.isEmpty(userList)) {
-            return new ArrayList<>();
-        }
-        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
-    }
 
     @Override
     public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {

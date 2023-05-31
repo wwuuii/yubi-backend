@@ -6,7 +6,7 @@ import com.yuxian.yubi.model.dto.user.UserQueryRequest;
 import com.yuxian.yubi.model.entity.User;
 import com.yuxian.yubi.model.vo.LoginUserVO;
 import com.yuxian.yubi.model.vo.UserVO;
-import java.util.List;
+
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -91,13 +91,6 @@ public interface UserService extends IService<User> {
      */
     UserVO getUserVO(User user);
 
-    /**
-     * 获取脱敏的用户信息
-     *
-     * @param userList
-     * @return
-     */
-    List<UserVO> getUserVO(List<User> userList);
 
     /**
      * 获取查询条件
