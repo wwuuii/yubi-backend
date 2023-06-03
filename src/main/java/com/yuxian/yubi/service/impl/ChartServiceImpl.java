@@ -1,14 +1,23 @@
 package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.yuxian.yubi.common.BaseResponse;
-import com.yuxian.yubi.model.dto.chart.ChartRequestDto;
+import com.yuxian.yubi.api.OpenAiApi;
+import com.yuxian.yubi.enums.AIModelEnum;
+import com.yuxian.yubi.enums.ChartTypeEnum;
+import com.yuxian.yubi.enums.ErrorCode;
+import com.yuxian.yubi.exception.ThrowUtils;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseReqDto;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseRespDto;
 import com.yuxian.yubi.model.entity.Chart;
 import com.yuxian.yubi.service.ChartService;
 import com.yuxian.yubi.mapper.ChartMapper;
 import com.yuxian.yubi.utils.ExcelUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import javax.annotation.Resource;
 
 /**
 * @author admin
@@ -19,13 +28,42 @@ import org.springframework.web.multipart.MultipartFile;
 public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
     implements ChartService{
 
+	@Resource
+	private OpenAiApi openAiApi;
+	@Resource
+	private ChartMapper chartMapper;
+
+
 	@Override
-	public String genChartQuestion(MultipartFile multipartFile, ChartRequestDto chartRequestDto) {
+	public GenChartAnalyseRespDto genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto) {
 		String csvData = ExcelUtils.excelToCsv(multipartFile);
-		StringBuilder result = new StringBuilder();
-		result.append("你是一个数据分析师,接下来我给你我的分析目标和原始数据,请告诉我分析结果\n").append("分析目标：").append(chartRequestDto.getGoal())
-				.append("\n").append("分析数据:\n").append(csvData);
-		return result.toString();
+		//生成用户需求
+		String question = genUserDemand(csvData, genChartAnalyseReqDto);
+
+		String chartAnalyseResult = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
+		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+		String[] results = chartAnalyseResult.split("【【【【【");
+		ThrowUtils.throwIf(results.length != 3, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+		results[1] = results[1].substring(results[1].indexOf('{'), results[1].lastIndexOf('}') + 1);
+		//入库
+		Chart chart = new Chart();
+		chart.setChartData(csvData);
+		chart.setGenChart(results[1]);
+		chart.setGenResult(results[2]);
+		chart.setName(genChartAnalyseReqDto.getName());
+		chart.setGoal(genChartAnalyseReqDto.getGoal());
+		chart.setChartType(genChartAnalyseReqDto.getChartType());
+		chartMapper.insert(chart);
+		return new GenChartAnalyseRespDto(results[1], results[2], chart.getId());
+	}
+
+	private String genUserDemand(String csvData, GenChartAnalyseReqDto genChartAnalyseReqDto) {
+
+		StringBuilder question = new StringBuilder();
+		question.append("分析需求：\n").append("{").append(genChartAnalyseReqDto.getGoal())
+				.append(",生成").append(ChartTypeEnum.LINE_CHART.getTypeName()).append("}\n")
+				.append("原始数据:\n").append("{").append(csvData).append("}");
+		return question.toString();
 	}
 }
 

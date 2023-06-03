@@ -1,5 +1,6 @@
 package com.yuxian.yubi.model.dto.chart;
 
+import com.yuxian.yubi.enums.ChartTypeEnum;
 import lombok.Data;
 
 /**
@@ -9,7 +10,7 @@ import lombok.Data;
  * @version 1.0
  **/
 @Data
-public class ChartRequestDto {
+public class GenChartAnalyseReqDto {
 
 	/**
 	 * 分析目标
@@ -18,7 +19,7 @@ public class ChartRequestDto {
 	/**
 	 * 图表类型
 	 */
-	private String chartType;
+	private String chartType = ChartTypeEnum.LINE_CHART.getTypeCode();
 	/**
 	 * 图表名称
 	 */

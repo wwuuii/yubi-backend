@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.yuxian.yubi.annotation.AuthCheck;
 import com.yuxian.yubi.common.BaseResponse;
 import com.yuxian.yubi.common.DeleteRequest;
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.common.ResultUtils;
 import com.yuxian.yubi.constant.UserConstant;
 import com.yuxian.yubi.exception.BusinessException;

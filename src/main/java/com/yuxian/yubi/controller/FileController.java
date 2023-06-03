@@ -2,7 +2,7 @@ package com.yuxian.yubi.controller;
 
 import cn.hutool.core.io.FileUtil;
 import com.yuxian.yubi.common.BaseResponse;
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.common.ResultUtils;
 import com.yuxian.yubi.constant.FileConstant;
 import com.yuxian.yubi.exception.BusinessException;

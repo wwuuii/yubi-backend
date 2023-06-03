@@ -1,6 +1,6 @@
 package com.yuxian.yubi.exception;
 
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 
 /**
  * 抛异常工具类

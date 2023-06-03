@@ -1,7 +1,7 @@
 package com.yuxian.yubi.exception;
 
 import com.yuxian.yubi.common.BaseResponse;
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.common.ResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ExceptionHandler;

@@ -2,7 +2,7 @@ package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.constant.CommonConstant;
 import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.mapper.UserMapper;

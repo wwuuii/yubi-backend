@@ -1,12 +1,13 @@
 package com.yuxian.yubi.controller;
 
 import com.yuxian.yubi.common.BaseResponse;
-import com.yuxian.yubi.common.ErrorCode;
+import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.common.ResultUtils;
+import com.yuxian.yubi.enums.ChartTypeEnum;
 import com.yuxian.yubi.exception.ThrowUtils;
-import com.yuxian.yubi.model.dto.chart.ChartRequestDto;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseReqDto;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseRespDto;
 import com.yuxian.yubi.service.ChartService;
-import com.yuxian.yubi.utils.ExcelUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,14 +27,22 @@ public class ChartController {
 	@Resource
 	private ChartService chartService;
 
-	@PostMapping("/genChartQuestion")
-	public BaseResponse<String> genChartQuestion(@RequestPart("file") MultipartFile multipartFile,
-												  ChartRequestDto chartRequestDto) {
+	@PostMapping("/genChartAnalyse")
+	public BaseResponse<GenChartAnalyseRespDto> genChartAnalyse(@RequestPart("file") MultipartFile multipartFile,
+																GenChartAnalyseReqDto genChartAnalyseReqDto) {
 		//参数校验
-		String name = chartRequestDto.getName();
-		String goal = chartRequestDto.getGoal();
+		String chartType = checkGenChartParam(genChartAnalyseReqDto);
+		genChartAnalyseReqDto.setChartType(ChartTypeEnum.chartTypeMap.get(chartType));
+		return ResultUtils.success(chartService.genChartAnalyse(multipartFile, genChartAnalyseReqDto));
+	}
+
+	private String checkGenChartParam(GenChartAnalyseReqDto genChartAnalyseReqDto) {
+		String name = genChartAnalyseReqDto.getName();
+		String goal = genChartAnalyseReqDto.getGoal();
+		String chartType = genChartAnalyseReqDto.getChartType();
+		ThrowUtils.throwIf(!ChartTypeEnum.chartTypeMap.containsKey(chartType),  ErrorCode.PARAMS_ERROR, "图表类型错误");
 		ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
 		ThrowUtils.throwIf(StringUtils.isBlank(goal) || name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名字长度不能超过100");
-		return ResultUtils.success(chartService.genChartQuestion(multipartFile, chartRequestDto));
+		return chartType;
 	}
 }

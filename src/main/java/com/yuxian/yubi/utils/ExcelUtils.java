@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author yuxian&羽弦
@@ -27,7 +28,8 @@ public class ExcelUtils {
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < excelData.size(); i++) {
 			LinkedHashMap<Integer, String> rowData = (LinkedHashMap<Integer, String>) excelData.get(i);
-			result.append(StringUtils.join(rowData.values().stream().filter(Objects::nonNull), ",")).append("\n");
+
+			result.append(StringUtils.join(rowData.values().stream().filter(Objects::nonNull).collect(Collectors.toList()),",")).append("\n");
 		}
 
 		Assert.notBlank(result, "excel转csv转换失败");

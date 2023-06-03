@@ -1,7 +1,7 @@
 package com.yuxian.yubi.service;
 
-import com.yuxian.yubi.common.BaseResponse;
-import com.yuxian.yubi.model.dto.chart.ChartRequestDto;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseReqDto;
+import com.yuxian.yubi.model.dto.chart.GenChartAnalyseRespDto;
 import com.yuxian.yubi.model.entity.Chart;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
@@ -17,8 +17,8 @@ public interface ChartService extends IService<Chart> {
 	 * 生成用户请求字符串
 	 *
 	 * @param multipartFile
-	 * @param chartRequestDto
+	 * @param genChartAnalyseReqDto
 	 * @return
 	 */
-	String genChartQuestion(MultipartFile multipartFile, ChartRequestDto chartRequestDto);
+	GenChartAnalyseRespDto genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto);
 }

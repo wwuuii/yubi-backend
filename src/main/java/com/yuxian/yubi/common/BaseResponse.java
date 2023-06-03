@@ -1,6 +1,8 @@
 package com.yuxian.yubi.common;
 
 import java.io.Serializable;
+
+import com.yuxian.yubi.enums.ErrorCode;
 import lombok.Data;
 
 /**

@@ -1,4 +1,4 @@
-package com.yuxian.yubi.common;
+package com.yuxian.yubi.enums;
 
 /**
  * 自定义错误码

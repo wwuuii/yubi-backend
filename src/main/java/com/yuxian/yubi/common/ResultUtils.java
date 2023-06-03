@@ -1,5 +1,7 @@
 package com.yuxian.yubi.common;
 
+import com.yuxian.yubi.enums.ErrorCode;
+
 /**
  * 返回工具类
  *

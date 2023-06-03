@@ -15,6 +15,25 @@ public class StringUtilsTest {
 
 	@Test
 	public void test() {
-		System.out.println(RandomStringUtils.randomAlphanumeric(8));
+		String s = "\n" +
+				"```javascript\n" +
+				"option = {\n" +
+				"    title: {\n" +
+				"        text: '用户数变化折线图'\n" +
+				"    },\n" +
+				"    xAxis: {\n" +
+				"        type: 'category',\n" +
+				"        data: ['1', '2', '3']\n" +
+				"    },\n" +
+				"    yAxis: {\n" +
+				"        type: 'value'\n" +
+				"    },\n" +
+				"    series: [{\n" +
+				"        data: ['10', '33', '55'],\n" +
+				"        type: 'line'\n" +
+				"    }]\n" +
+				"};\n" +
+				"```\n";
+		System.out.println(s.substring(s.indexOf('{'), s.lastIndexOf('}') + 1));
 	}
 }
