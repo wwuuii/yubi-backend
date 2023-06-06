@@ -18,7 +18,11 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 public enum ChartTypeEnum {
 
-	LINE_CHART("line_chart", "折线图");
+	LINE_CHART("line_chart", "折线图"),
+	histogram("histogram", "柱状图"),
+	STACK_CHART("stack_chart", "堆叠图"),
+	PIE_CHART("pie_chart", "饼图"),
+	RADAR_CHART("radar_chart", "雷达图");
 
 	private String typeCode;
 	private String typeName;

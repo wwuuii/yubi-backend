@@ -1,7 +1,9 @@
-package com.yuxian.yubi.model.dto.chart;
+package com.yuxian.yubi.model.dto.chart.req;
 
 import com.yuxian.yubi.enums.ChartTypeEnum;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * @author yuxian&羽弦
@@ -10,6 +12,8 @@ import lombok.Data;
  * @version 1.0
  **/
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class GenChartAnalyseReqDto {
 
 	/**
@@ -25,4 +29,5 @@ public class GenChartAnalyseReqDto {
 	 */
 	private String name;
 
+	private Long userId;
 }

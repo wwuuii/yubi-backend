@@ -1,7 +1,7 @@
 package com.yuxian.yubi.service;
 
-import com.yuxian.yubi.model.dto.chart.GenChartAnalyseReqDto;
-import com.yuxian.yubi.model.dto.chart.GenChartAnalyseRespDto;
+import com.yuxian.yubi.model.dto.chart.req.GenChartAnalyseReqDto;
+import com.yuxian.yubi.model.dto.chart.resp.GenChartAnalyseRespDto;
 import com.yuxian.yubi.model.entity.Chart;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;

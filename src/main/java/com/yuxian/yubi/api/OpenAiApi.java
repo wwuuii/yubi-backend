@@ -31,4 +31,5 @@ public class OpenAiApi {
 		ThrowUtils.throwIf(response == null || response.getData() == null, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
 		return response.getData().getContent();
 	}
+
 }

@@ -1,4 +1,4 @@
-package com.yuxian.yubi.model.dto.chart;
+package com.yuxian.yubi.model.dto.chart.resp;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

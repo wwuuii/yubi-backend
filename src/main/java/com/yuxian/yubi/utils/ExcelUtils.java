@@ -3,6 +3,8 @@ package com.yuxian.yubi.utils;
 import cn.hutool.core.lang.Assert;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.support.ExcelTypeEnum;
+import com.yuxian.yubi.enums.ErrorCode;
+import com.yuxian.yubi.exception.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +26,12 @@ import java.util.stream.Collectors;
 public class ExcelUtils {
 
 	public static String excelToCsv(MultipartFile multipartFile) {
+		ThrowUtils.throwIf(Objects.isNull(multipartFile), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
+		String originalFilename = multipartFile.getOriginalFilename();
+		ThrowUtils.throwIf(StringUtils.isBlank(originalFilename), ErrorCode.PARAMS_ERROR, "文件名不能为空");
+		int dotIndex = originalFilename.lastIndexOf('.');
+		ThrowUtils.throwIf(dotIndex < 0 || dotIndex >= originalFilename.length() - 1 || !"xlsx".equals(originalFilename.substring(dotIndex + 1)), ErrorCode.PARAMS_ERROR, "文件格式错误");
+
 		List<Map<Integer, String>> excelData = readExcel(multipartFile);
 		StringBuilder result = new StringBuilder();
 		for (int i = 0; i < excelData.size(); i++) {
