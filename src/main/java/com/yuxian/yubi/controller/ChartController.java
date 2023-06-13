@@ -11,7 +11,6 @@ import com.yuxian.yubi.convert.ChartConvert;
 import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.common.ResultUtils;
 import com.yuxian.yubi.enums.ChartTypeEnum;
-import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.exception.ThrowUtils;
 import com.yuxian.yubi.model.dto.chart.req.ChartQueryReqDto;
 import com.yuxian.yubi.model.dto.chart.req.ChartReqDto;
@@ -24,7 +23,6 @@ import com.yuxian.yubi.service.UserService;
 import com.yuxian.yubi.utils.SqlUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,7 +50,7 @@ public class ChartController {
 	public BaseResponse<GenChartAnalyseRespDto> genChartAnalyse(@RequestPart("file") MultipartFile multipartFile,
 																GenChartAnalyseReqDto genChartAnalyseReqDto, HttpServletRequest request) {
 		//参数校验
-		checkGenChartParam(genChartAnalyseReqDto);
+		checkGenChartParam(genChartAnalyseReqDto, multipartFile);
 		//权限校验
 		User loginUser = userService.getLoginUser(request);
 		ThrowUtils.throwIf(Objects.isNull(loginUser), ErrorCode.NO_AUTH_ERROR);
@@ -62,7 +60,7 @@ public class ChartController {
 		return ResultUtils.success(genChartAnalyseRespDto);
 	}
 
-	private void checkGenChartParam(GenChartAnalyseReqDto genChartAnalyseReqDto) {
+	private void checkGenChartParam(GenChartAnalyseReqDto genChartAnalyseReqDto, MultipartFile multipartFile) {
 		String name = genChartAnalyseReqDto.getName();
 		String goal = genChartAnalyseReqDto.getGoal();
 		String chartType = genChartAnalyseReqDto.getChartType();
@@ -70,6 +68,9 @@ public class ChartController {
 		ThrowUtils.throwIf(StringUtils.isBlank(goal), ErrorCode.PARAMS_ERROR, "分析目标不能为空");
 		ThrowUtils.throwIf(StringUtils.isBlank(goal) || name.length() > 100, ErrorCode.PARAMS_ERROR, "图表名字长度不能超过100");
 		genChartAnalyseReqDto.setChartType(ChartTypeEnum.chartTypeMap.get(chartType));
+		ThrowUtils.throwIf(Objects.isNull(multipartFile), ErrorCode.PARAMS_ERROR, "文件不能为空");
+		final long ONE_MB = 1024 * 1024;
+		ThrowUtils.throwIf(multipartFile.getSize() > ONE_MB, ErrorCode.PARAMS_ERROR, "文件大小不能超过1M");
 	}
 
 	// region 增删改查

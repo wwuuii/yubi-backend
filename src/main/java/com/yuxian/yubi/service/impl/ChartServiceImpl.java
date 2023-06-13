@@ -61,6 +61,7 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 		chart.setGoal(genChartAnalyseReqDto.getGoal());
 		chart.setChartType(genChartAnalyseReqDto.getChartType());
 		chartMapper.insert(chart);
+
 		return new GenChartAnalyseRespDto(results[1], results[2], chart.getId());
 	}
 
@@ -93,6 +94,7 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 				.append("原始数据:\n").append("{").append(csvData).append("}");
 		return question.toString();
 	}
+
 }
 
 
