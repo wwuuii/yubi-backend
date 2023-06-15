@@ -1,4 +1,4 @@
-package com.yuxian.yubi.model.enums;
+package com.yuxian.yubi.enums;
 
 import java.util.Arrays;
 import java.util.List;

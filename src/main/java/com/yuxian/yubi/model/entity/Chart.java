@@ -67,6 +67,9 @@ public class Chart implements Serializable {
      */
     private Date updateTime;
 
+    private Integer status;
+
+    private String execMessage;
     /**
      * 是否删除
      */

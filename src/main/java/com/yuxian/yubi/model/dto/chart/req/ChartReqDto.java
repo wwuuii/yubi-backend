@@ -49,4 +49,6 @@ public class ChartReqDto {
 	 */
 	private Long userId;
 
+	private Integer status;
+
 }

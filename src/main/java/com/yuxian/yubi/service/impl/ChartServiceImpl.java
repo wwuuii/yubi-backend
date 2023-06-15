@@ -1,90 +1,82 @@
 package com.yuxian.yubi.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.yuxian.yubi.api.OpenAiApi;
-import com.yuxian.yubi.enums.AIModelEnum;
-import com.yuxian.yubi.enums.ChartTypeEnum;
+import com.yuxian.yubi.enums.ChartStatusEnum;
 import com.yuxian.yubi.enums.ErrorCode;
-import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.exception.ThrowUtils;
-import com.yuxian.yubi.model.dto.chart.req.GenChartAnalyseReqDto;
-import com.yuxian.yubi.model.dto.chart.resp.GenChartAnalyseRespDto;
-import com.yuxian.yubi.model.entity.Chart;
-import com.yuxian.yubi.service.ChartService;
+import com.yuxian.yubi.job.once.ChartAnalyseJob;
 import com.yuxian.yubi.mapper.ChartMapper;
-import com.yuxian.yubi.service.UserService;
+import com.yuxian.yubi.model.dto.chart.req.GenChartAnalyseReqDto;
+import com.yuxian.yubi.model.entity.Chart;
+import com.yuxian.yubi.service.ChartAnalyseOverflowService;
+import com.yuxian.yubi.service.ChartService;
 import com.yuxian.yubi.utils.ExcelUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
-* @author admin
-* @description 针对表【chart(图表信息表)】的数据库操作Service实现
-* @createDate 2023-05-27 16:32:46
-*/
+ * @author admin
+ * @description 针对表【chart(图表信息表)】的数据库操作Service实现
+ * @createDate 2023-05-27 16:32:46
+ */
 @Service
 public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
-    implements ChartService{
+		implements ChartService {
 
-	@Resource
-	private OpenAiApi openAiApi;
 	@Resource
 	private ChartMapper chartMapper;
 	@Resource
-	private UserService userService;
+	private OpenAiApi openAiApi;
+	@Resource
+	private ThreadPoolExecutor threadPoolExecutor;
+	@Resource
+	private ChartAnalyseOverflowService chartAnalyseOverflowService;
 
 	@Override
-	public GenChartAnalyseRespDto genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto) {
+	public void genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto) {
 		String csvData = ExcelUtils.excelToCsv(multipartFile);
 		//生成用户需求
 		String question = genUserDemand(csvData, genChartAnalyseReqDto);
-
-		String chartAnalyseResult = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
-		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		String[] results = chartAnalyseResult.split("【【【【【");
-		ThrowUtils.throwIf(results.length != 3, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		results[1] = results[1].substring(results[1].indexOf('{'), results[1].lastIndexOf('}') + 1);
-		results[1] = removeTitle(results[1]);
 		//入库
 		Chart chart = new Chart();
 		chart.setUserId(genChartAnalyseReqDto.getUserId());
 		chart.setChartData(csvData);
-		chart.setGenChart(results[1]);
-		chart.setGenResult(results[2]);
+		chart.setStatus(ChartStatusEnum.WAIT.getCode());
 		chart.setName(genChartAnalyseReqDto.getName());
 		chart.setGoal(genChartAnalyseReqDto.getGoal());
 		chart.setChartType(genChartAnalyseReqDto.getChartType());
-		chartMapper.insert(chart);
+		int saveResult = chartMapper.insert(chart);
+		ThrowUtils.throwIf(saveResult <= 0, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
-		return new GenChartAnalyseRespDto(results[1], results[2], chart.getId());
-	}
-
-	/**
-	 * 隐藏图表的 title
-	 * @param jsonString
-	 * @return
-	 */
-	private String removeTitle(String jsonString) {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode jsonNode = mapper.readTree(jsonString);
-			if (jsonNode.has("title")) {
-				// 如果 JSON 中有 "title" 属性，则将其移除
-				ObjectNode objectNode = (ObjectNode) jsonNode;
-				objectNode.remove("title");
-				jsonString = mapper.writeValueAsString(objectNode);
+		//异步提交分析图表
+		ChartAnalyseJob chartAnalyseJob = new ChartAnalyseJob(chart.getId(), openAiApi, question, this, chartAnalyseOverflowService);
+		CompletableFuture.runAsync(chartAnalyseJob, threadPoolExecutor).handle((result, ex) -> {
+			if (!Objects.isNull(ex)) {
+				LambdaUpdateWrapper<Chart> updateWrapper = new LambdaUpdateWrapper<>();
+				updateWrapper.eq(Chart::getId, chart.getId()).set(Chart::getStatus, ChartStatusEnum.FAILED.getCode()).set(Chart::getExecMessage, ex.getMessage());
+				update(updateWrapper);
 			}
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		}
-		return jsonString;
+			return "";
+		});
+
 	}
+
+	@Override
+	public void updateChartStatus(Long id, Integer status) {
+		LambdaUpdateWrapper<Chart> wrapper = new LambdaUpdateWrapper<>();
+		wrapper.eq(Chart::getId, id).set(Chart::getStatus, status);
+		boolean update = update(wrapper);
+		ThrowUtils.throwIf(!update, ErrorCode.SYSTEM_ERROR, "图表状态更新失败");
+	}
+
 
 	private String genUserDemand(String csvData, GenChartAnalyseReqDto genChartAnalyseReqDto) {
 

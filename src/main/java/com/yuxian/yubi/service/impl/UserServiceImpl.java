@@ -2,13 +2,13 @@ package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.constant.CommonConstant;
+import com.yuxian.yubi.enums.ErrorCode;
+import com.yuxian.yubi.enums.UserRoleEnum;
 import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.mapper.UserMapper;
 import com.yuxian.yubi.model.dto.user.UserQueryRequest;
 import com.yuxian.yubi.model.entity.User;
-import com.yuxian.yubi.model.enums.UserRoleEnum;
 import com.yuxian.yubi.model.vo.LoginUserVO;
 import com.yuxian.yubi.model.vo.UserVO;
 import com.yuxian.yubi.service.UserService;

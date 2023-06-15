@@ -15,7 +15,6 @@ import com.yuxian.yubi.exception.ThrowUtils;
 import com.yuxian.yubi.model.dto.chart.req.ChartQueryReqDto;
 import com.yuxian.yubi.model.dto.chart.req.ChartReqDto;
 import com.yuxian.yubi.model.dto.chart.req.GenChartAnalyseReqDto;
-import com.yuxian.yubi.model.dto.chart.resp.GenChartAnalyseRespDto;
 import com.yuxian.yubi.model.entity.Chart;
 import com.yuxian.yubi.model.entity.User;
 import com.yuxian.yubi.service.ChartService;
@@ -47,7 +46,7 @@ public class ChartController {
 
 	@PostMapping("/genChartAnalyse")
 	@RequestLimit()
-	public BaseResponse<GenChartAnalyseRespDto> genChartAnalyse(@RequestPart("file") MultipartFile multipartFile,
+	public BaseResponse<String> genChartAnalyse(@RequestPart("file") MultipartFile multipartFile,
 																GenChartAnalyseReqDto genChartAnalyseReqDto, HttpServletRequest request) {
 		//参数校验
 		checkGenChartParam(genChartAnalyseReqDto, multipartFile);
@@ -56,8 +55,8 @@ public class ChartController {
 		ThrowUtils.throwIf(Objects.isNull(loginUser), ErrorCode.NO_AUTH_ERROR);
 
 		genChartAnalyseReqDto.setUserId(loginUser.getId());
-		GenChartAnalyseRespDto genChartAnalyseRespDto = chartService.genChartAnalyse(multipartFile, genChartAnalyseReqDto);
-		return ResultUtils.success(genChartAnalyseRespDto);
+		chartService.genChartAnalyse(multipartFile, genChartAnalyseReqDto);
+		return ResultUtils.success("提交成功");
 	}
 
 	private void checkGenChartParam(GenChartAnalyseReqDto genChartAnalyseReqDto, MultipartFile multipartFile) {

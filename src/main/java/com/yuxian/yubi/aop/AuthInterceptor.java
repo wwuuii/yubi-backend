@@ -4,7 +4,7 @@ import com.yuxian.yubi.annotation.AuthCheck;
 import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.model.entity.User;
-import com.yuxian.yubi.model.enums.UserRoleEnum;
+import com.yuxian.yubi.enums.UserRoleEnum;
 import com.yuxian.yubi.service.UserService;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;

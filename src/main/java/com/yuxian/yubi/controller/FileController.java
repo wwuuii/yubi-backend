@@ -9,7 +9,7 @@ import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.manager.CosManager;
 import com.yuxian.yubi.model.dto.file.UploadFileRequest;
 import com.yuxian.yubi.model.entity.User;
-import com.yuxian.yubi.model.enums.FileUploadBizEnum;
+import com.yuxian.yubi.enums.FileUploadBizEnum;
 import com.yuxian.yubi.service.UserService;
 import java.io.File;
 import java.util.Arrays;

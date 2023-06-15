@@ -7,10 +7,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
-* @author admin
-* @description 针对表【chart(图表信息表)】的数据库操作Service
-* @createDate 2023-05-27 16:32:46
-*/
+ * @author admin
+ * @description 针对表【chart(图表信息表)】的数据库操作Service
+ * @createDate 2023-05-27 16:32:46
+ */
 public interface ChartService extends IService<Chart> {
 
 	/**
@@ -20,5 +20,13 @@ public interface ChartService extends IService<Chart> {
 	 * @param genChartAnalyseReqDto
 	 * @return
 	 */
-	GenChartAnalyseRespDto genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto);
+	void genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto);
+
+	/**
+	 * 修改图表状态
+	 *
+	 * @param id
+	 * @param status
+	 */
+	void updateChartStatus(Long id, Integer status);
 }

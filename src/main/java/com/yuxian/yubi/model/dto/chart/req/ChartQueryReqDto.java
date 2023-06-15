@@ -48,4 +48,8 @@ public class ChartQueryReqDto extends PageRequest {
 	 * 用户Id
 	 */
 	private Long userId;
+
+	private Integer status;
+
+
 }

@@ -22,4 +22,8 @@ public class GenChartAnalyseRespDto {
 
 	private Long chartId;
 
+	private String execMessage;
+
+	private Integer status;
+
 }

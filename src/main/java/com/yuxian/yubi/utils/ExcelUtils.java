@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExcelUtils {
 
-	private final static List<String> validSuffix = Collections.singletonList("xlsx, xls");
+	private final static List<String> validSuffix = Arrays.asList("xlsx","xls");
 
 	public static String excelToCsv(MultipartFile multipartFile) {
 		ThrowUtils.throwIf(Objects.isNull(multipartFile), ErrorCode.PARAMS_ERROR, "上传文件不能为空");
