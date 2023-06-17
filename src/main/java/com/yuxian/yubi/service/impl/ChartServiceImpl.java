@@ -2,6 +2,7 @@ package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.github.rholder.retry.Retryer;
 import com.yuxian.yubi.api.OpenAiApi;
 import com.yuxian.yubi.enums.ChartStatusEnum;
 import com.yuxian.yubi.enums.ErrorCode;
@@ -19,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.annotation.Resource;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.FutureTask;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -39,6 +39,8 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 	private ThreadPoolExecutor threadPoolExecutor;
 	@Resource
 	private ChartAnalyseOverflowService chartAnalyseOverflowService;
+	@Resource
+	private Retryer<Boolean> retryer;
 
 	@Override
 	public void genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto) {
@@ -58,7 +60,13 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 
 		//异步提交分析图表
 		ChartAnalyseJob chartAnalyseJob = new ChartAnalyseJob(chart.getId(), openAiApi, question, this, chartAnalyseOverflowService);
-		CompletableFuture.runAsync(chartAnalyseJob, threadPoolExecutor).handle((result, ex) -> {
+		CompletableFuture.runAsync(() -> {
+			try {
+				retryer.call(chartAnalyseJob);
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}, threadPoolExecutor).handle((result, ex) -> {
 			if (!Objects.isNull(ex)) {
 				LambdaUpdateWrapper<Chart> updateWrapper = new LambdaUpdateWrapper<>();
 				updateWrapper.eq(Chart::getId, chart.getId()).set(Chart::getStatus, ChartStatusEnum.FAILED.getCode()).set(Chart::getExecMessage, ex.getMessage());

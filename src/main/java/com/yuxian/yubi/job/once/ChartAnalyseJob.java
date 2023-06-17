@@ -25,7 +25,7 @@ import java.util.concurrent.Callable;
  * @version 1.0
  **/
 @Data
-public class ChartAnalyseJob implements Runnable {
+public class ChartAnalyseJob implements Callable<Boolean> {
 
 	/**
 	 * 图表Id
@@ -49,7 +49,7 @@ public class ChartAnalyseJob implements Runnable {
 	}
 
 	@Override
-	public void run() {
+	public Boolean call() {
 		String chartAnalyseResult = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
 		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.OPERATION_ERROR, "生成AI回答失败");
 		String[] results = chartAnalyseResult.split("【【【【【");
@@ -61,6 +61,7 @@ public class ChartAnalyseJob implements Runnable {
 		updateWrapper.eq(Chart::getId, chartId).set(Chart::getGenChart, results[1]).set(Chart::getGenResult, results[2]).set(Chart::getStatus, ChartStatusEnum.SUCCEED.getCode());
 		boolean updateResult = chartService.update(updateWrapper);
 		ThrowUtils.throwIf(!updateResult, ErrorCode.SYSTEM_ERROR, "分析结果更新数据库失败");
+		return true;
 	}
 
 	/**
