@@ -14,15 +14,18 @@ spring:
     # store-type: redis
     # 30 天过期
     timeout: 2592000
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   # 数据库配置
-  # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/yubi
     username: root
     password: root
   # Redis 配置
-  # todo 需替换配置，然后取消注释
   redis:
     database: 1
     host: localhost
@@ -30,7 +33,6 @@ spring:
     timeout: 5000
 #    password: 123456
   # Elasticsearch 配置
-  # todo 需替换配置，然后取消注释
 #  elasticsearch:
 #    uris: http://localhost:9200
 #    username: root

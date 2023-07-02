@@ -2,25 +2,19 @@ package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.github.rholder.retry.Retryer;
-import com.yuxian.yubi.api.OpenAiApi;
+import com.yuxian.yubi.bizmq.BiMessageProducer;
 import com.yuxian.yubi.enums.ChartStatusEnum;
 import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.exception.ThrowUtils;
-import com.yuxian.yubi.job.once.ChartAnalyseJob;
 import com.yuxian.yubi.mapper.ChartMapper;
 import com.yuxian.yubi.model.dto.chart.req.GenChartAnalyseReqDto;
 import com.yuxian.yubi.model.entity.Chart;
-import com.yuxian.yubi.service.ChartAnalyseOverflowService;
 import com.yuxian.yubi.service.ChartService;
 import com.yuxian.yubi.utils.ExcelUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author admin
@@ -34,19 +28,12 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 	@Resource
 	private ChartMapper chartMapper;
 	@Resource
-	private OpenAiApi openAiApi;
-	@Resource
-	private ThreadPoolExecutor threadPoolExecutor;
-	@Resource
-	private ChartAnalyseOverflowService chartAnalyseOverflowService;
-	@Resource
-	private Retryer<Boolean> retryer;
+	private BiMessageProducer biMessageProducer;
 
 	@Override
 	public void genChartAnalyse(MultipartFile multipartFile, GenChartAnalyseReqDto genChartAnalyseReqDto) {
 		String csvData = ExcelUtils.excelToCsv(multipartFile);
-		//生成用户需求
-		String question = genUserDemand(csvData, genChartAnalyseReqDto);
+
 		//入库
 		Chart chart = new Chart();
 		chart.setUserId(genChartAnalyseReqDto.getUserId());
@@ -59,21 +46,23 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 		ThrowUtils.throwIf(saveResult <= 0, ErrorCode.SYSTEM_ERROR, "图表保存失败");
 
 		//异步提交分析图表
-		ChartAnalyseJob chartAnalyseJob = new ChartAnalyseJob(chart.getId(), openAiApi, question, this, chartAnalyseOverflowService);
-		CompletableFuture.runAsync(() -> {
-			try {
-				retryer.call(chartAnalyseJob);
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}, threadPoolExecutor).handle((result, ex) -> {
-			if (!Objects.isNull(ex)) {
-				LambdaUpdateWrapper<Chart> updateWrapper = new LambdaUpdateWrapper<>();
-				updateWrapper.eq(Chart::getId, chart.getId()).set(Chart::getStatus, ChartStatusEnum.FAILED.getCode()).set(Chart::getExecMessage, ex.getMessage());
-				update(updateWrapper);
-			}
-			return "";
-		});
+//		ChartAnalyseJob chartAnalyseJob = new ChartAnalyseJob(chart.getId(), openAiApi, question, this, chartAnalyseOverflowService);
+//		CompletableFuture.runAsync(() -> {
+//			try {
+//				retryer.call(chartAnalyseJob);
+//			} catch (Exception e) {
+//				throw new RuntimeException(e);
+//			}
+//		}, threadPoolExecutor).handle((result, ex) -> {
+//			if (!Objects.isNull(ex)) {
+//				LambdaUpdateWrapper<Chart> updateWrapper = new LambdaUpdateWrapper<>();
+//				updateWrapper.eq(Chart::getId, chart.getId()).set(Chart::getStatus, ChartStatusEnum.FAILED.getCode()).set(Chart::getExecMessage, ex.getMessage());
+//				update(updateWrapper);
+//			}
+//			return "";
+//		});
+		//分析图表任务提交至消息队列
+		biMessageProducer.sendMessage(String.valueOf(chart.getId()));
 
 	}
 
@@ -85,15 +74,6 @@ public class ChartServiceImpl extends ServiceImpl<ChartMapper, Chart>
 		ThrowUtils.throwIf(!update, ErrorCode.SYSTEM_ERROR, "图表状态更新失败");
 	}
 
-
-	private String genUserDemand(String csvData, GenChartAnalyseReqDto genChartAnalyseReqDto) {
-
-		StringBuilder question = new StringBuilder();
-		question.append("分析需求：\n").append("{").append(genChartAnalyseReqDto.getGoal())
-				.append(",生成").append(genChartAnalyseReqDto.getChartType()).append("}\n")
-				.append("原始数据:\n").append("{").append(csvData).append("}");
-		return question.toString();
-	}
 
 }
 

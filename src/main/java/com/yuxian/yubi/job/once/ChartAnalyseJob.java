@@ -50,12 +50,8 @@ public class ChartAnalyseJob implements Callable<Boolean> {
 
 	@Override
 	public Boolean call() {
-		String chartAnalyseResult = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
-		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		String[] results = chartAnalyseResult.split("【【【【【");
-		ThrowUtils.throwIf(results.length != 3, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		results[1] = results[1].substring(results[1].indexOf('{'), results[1].lastIndexOf('}') + 1);
-		results[1] = removeTitle(results[1]);
+		String[] results = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
+
 		// 生成图表类
 		LambdaUpdateWrapper<Chart> updateWrapper = new LambdaUpdateWrapper<>();
 		updateWrapper.eq(Chart::getId, chartId).set(Chart::getGenChart, results[1]).set(Chart::getGenResult, results[2]).set(Chart::getStatus, ChartStatusEnum.SUCCEED.getCode());
@@ -64,24 +60,4 @@ public class ChartAnalyseJob implements Callable<Boolean> {
 		return true;
 	}
 
-	/**
-	 * 隐藏图表的 title
-	 * @param jsonString
-	 * @return
-	 */
-	private String removeTitle(String jsonString) {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			JsonNode jsonNode = mapper.readTree(jsonString);
-			if (jsonNode.has("title")) {
-				// 如果 JSON 中有 "title" 属性，则将其移除
-				ObjectNode objectNode = (ObjectNode) jsonNode;
-				objectNode.remove("title");
-				jsonString = mapper.writeValueAsString(objectNode);
-			}
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "生成AI回答失败");
-		}
-		return jsonString;
-	}
 }

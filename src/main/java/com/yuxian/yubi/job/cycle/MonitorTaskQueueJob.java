@@ -23,8 +23,8 @@ public class MonitorTaskQueueJob {
 
 	@Resource
 	private ThreadPoolExecutor threadPoolExecutor;
-	// 当任务队列数超过maxThreshold时，增加核心线程数
-	private Integer maxThreshold = 6;
+	// 当任务队列数超过queueSizeThreshold时，增加核心线程数
+	private Integer queueSizeThreshold = 6;
 	// 核心线程数不能超过该值
 	private Integer maxThreadNum = 10;
 	// 核心线程数不能低于该值
@@ -34,7 +34,7 @@ public class MonitorTaskQueueJob {
 	public void adjustThreadPool() {
 		int queueSize = threadPoolExecutor.getQueue().size();
 		int corePoolSize = threadPoolExecutor.getCorePoolSize();
-		if (queueSize > maxThreshold) {
+		if (queueSize > queueSizeThreshold) {
 			if (corePoolSize < maxThreadNum) {
 				threadPoolExecutor.setCorePoolSize(corePoolSize + 1);
 			}
