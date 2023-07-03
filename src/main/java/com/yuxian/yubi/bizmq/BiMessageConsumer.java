@@ -1,16 +1,19 @@
 package com.yuxian.yubi.bizmq;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.github.rholder.retry.Retryer;
 import com.rabbitmq.client.Channel;
 import com.yuxian.yubi.api.OpenAiApi;
 import com.yuxian.yubi.enums.AIModelEnum;
 import com.yuxian.yubi.enums.ChartStatusEnum;
 import com.yuxian.yubi.enums.ErrorCode;
+import com.yuxian.yubi.exception.BusinessException;
 import com.yuxian.yubi.exception.ThrowUtils;
 import com.yuxian.yubi.mapper.ChartMapper;
 import com.yuxian.yubi.model.entity.Chart;
 import com.yuxian.yubi.service.ChartService;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
@@ -27,6 +30,7 @@ import javax.annotation.Resource;
  * @version 1.0
  **/
 @Component
+@Slf4j
 public class BiMessageConsumer {
 
 	@Resource
@@ -35,6 +39,8 @@ public class BiMessageConsumer {
 	private ChartMapper chartMapper;
 	@Resource
 	private ChartService chartService;
+	@Resource
+	private Retryer<Boolean> retryer;
 
 	@RabbitListener(queues = {BiMqConstant.BI_QUEUE_NAME}, ackMode = "MANUAL")
 	@SneakyThrows
@@ -42,9 +48,23 @@ public class BiMessageConsumer {
 		if (StringUtils.isBlank(message)) {
 			channel.basicNack(deliveryTag, false, false);
 		}
+		try {
+			retryer.call(() -> {
+				handleMessage(message);
+				return true;
+			});
+			channel.basicAck(deliveryTag, false);
+		} catch (Exception e) {
+			channel.basicNack(deliveryTag,  false, false);
+			log.error("BiMessageConsumer.class  " + e.getMessage());
+		}
 
-		Chart chart = chartMapper.selectById(Long.valueOf(message));
-		ThrowUtils.throwIf(chart == null, ErrorCode.SYSTEM_ERROR, String.format("消息处理失败，消息ID为:%s的数据不存在", message));
+	}
+
+	private void handleMessage(String message) {
+
+		Chart chart = getChartByBiMessage(message);
+		ThrowUtils.throwIf(chart == null, ErrorCode.PARAMS_ERROR, String.format("消息处理失败，消息ID为:%s的数据不存在", message));
 		//生成用户需求
 		String question = genUserDemand(chart.getChartData(), chart.getGoal(), chart.getChartType());
 		String[] results = openAiApi.genChartAnalyse(AIModelEnum.CHART_MODEL.getId(), question);
@@ -54,6 +74,16 @@ public class BiMessageConsumer {
 		updateWrapper.eq(Chart::getId, chart.getId()).set(Chart::getGenChart, results[1]).set(Chart::getGenResult, results[2]).set(Chart::getStatus, ChartStatusEnum.SUCCEED.getCode());
 		boolean updateResult = chartService.update(updateWrapper);
 		ThrowUtils.throwIf(!updateResult, ErrorCode.SYSTEM_ERROR, "分析结果更新数据库失败");
+	}
+
+	public Chart getChartByBiMessage(String message) {
+		long id;
+		try {
+			id = Long.parseLong(message);
+		} catch (NumberFormatException e) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "消息处理失败，消息ID为:" + message + "的数据不存在");
+		}
+		return chartMapper.selectById(id);
 	}
 
 	private String genUserDemand(String csvData, String goal, String chartType) {

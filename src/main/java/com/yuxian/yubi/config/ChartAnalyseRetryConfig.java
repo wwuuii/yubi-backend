@@ -28,7 +28,7 @@ public class ChartAnalyseRetryConfig {
 				.retryIfResult(r -> !r)
 				//等待策略：每次请求间隔1s
 				.withWaitStrategy(WaitStrategies.fixedWait(fixedWait, TimeUnit.SECONDS))
-				//停止策略 : 尝试请求2次
+				//停止策略 : 尝试请求3次
 				.withStopStrategy(StopStrategies.stopAfterAttempt(stopAfterAttempt))
 				.build();
 	}

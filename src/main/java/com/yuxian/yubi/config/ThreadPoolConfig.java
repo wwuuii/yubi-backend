@@ -5,14 +5,11 @@ import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.exception.ThrowUtils;
 import com.yuxian.yubi.job.once.ChartAnalyseJob;
 import com.yuxian.yubi.model.entity.ChartAnalyseOverflow;
-import com.yuxian.yubi.service.ChartAnalyseOverflowService;
-import com.yuxian.yubi.service.ChartService;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.Resource;
 import java.util.concurrent.*;
 
 /**

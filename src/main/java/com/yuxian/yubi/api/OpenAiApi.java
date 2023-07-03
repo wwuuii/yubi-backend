@@ -33,12 +33,12 @@ public class OpenAiApi {
 		devChatRequest.setModelId(modelId);
 		devChatRequest.setMessage(question);
 		BaseResponse<DevChatResponse> response = client.doChat(devChatRequest);
-		ThrowUtils.throwIf(response == null || response.getData() == null, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+		ThrowUtils.throwIf(response == null || response.getData() == null, ErrorCode.SYSTEM_ERROR, "生成AI回答失败");
 
 		String chartAnalyseResult = response.getData().getContent();
-		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+		ThrowUtils.throwIf(StringUtils.isBlank(chartAnalyseResult), ErrorCode.SYSTEM_ERROR, "生成AI回答失败");
 		String[] results = chartAnalyseResult.split("【【【【【");
-		ThrowUtils.throwIf(results.length != 3, ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+		ThrowUtils.throwIf(results.length != 3, ErrorCode.SYSTEM_ERROR, "生成AI回答失败");
 		results[1] = results[1].substring(results[1].indexOf('{'), results[1].lastIndexOf('}') + 1);
 		results[1] = removeTitle(results[1]);
 		return results;
@@ -60,7 +60,7 @@ public class OpenAiApi {
 				jsonString = mapper.writeValueAsString(objectNode);
 			}
 		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "生成AI回答失败");
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "生成AI回答失败");
 		}
 		return jsonString;
 	}
