@@ -100,4 +100,12 @@ public interface UserService extends IService<User> {
      */
     QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 
+    /**
+     * 修改用户可使用次数
+     * @param userId
+     * @param num
+
+     */
+    boolean modifyUserChartAvailableNum(Long userId, Integer num);
+
 }

@@ -13,6 +13,7 @@ import com.yuxian.yubi.model.dto.user.*;
 import com.yuxian.yubi.model.entity.User;
 import com.yuxian.yubi.model.vo.LoginUserVO;
 import com.yuxian.yubi.service.UserService;
+import com.yuxian.yubi.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -20,6 +21,14 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.concurrent.TimeUnit;
+
+import static com.yuxian.yubi.constant.RedisConstant.USER_GET_AVAILABLE;
+import static com.yuxian.yubi.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * 用户接口
@@ -33,6 +42,8 @@ public class UserController {
 
     @Resource
     private UserService userService;
+    @Resource
+    private RedisUtils redisUtils;
 
     // region 登录相关
 
@@ -227,4 +238,37 @@ public class UserController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
+
+    @PostMapping("/modifyUserChartAvailableNum/{userId}/{num}")
+    public BaseResponse<Boolean> modifyUserChartAvailableNum(@PathVariable("userId") Long userId, @PathVariable("num") Integer num, HttpServletRequest request){
+		if(userId == null || num == null){
+			throw new BusinessException(ErrorCode.PARAMS_ERROR);
+		}
+        // 先判断是否已登录
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null || currentUser.getId() == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+        }
+        //判断用户是否已领取
+        if (redisUtils.hasKey(USER_GET_AVAILABLE)) {
+            if (!redisUtils.setSet(USER_GET_AVAILABLE, userId)) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            }
+        } else {
+            LocalTime midnight = LocalTime.of(23, 59, 59, 999);
+            LocalDateTime currentDateTime = LocalDateTime.now();
+            LocalDateTime midnightDateTime = currentDateTime.with(midnight);
+            Duration duration = Duration.between(currentDateTime, midnightDateTime);
+            long expireTime = duration.toMillis();
+            if (!redisUtils.setSet(USER_GET_AVAILABLE, userId, expireTime, TimeUnit.MILLISECONDS)) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR);
+            }
+        }
+
+		boolean result = userService.modifyUserChartAvailableNum(userId, num);
+		return ResultUtils.success(result);
+	}
+
 }

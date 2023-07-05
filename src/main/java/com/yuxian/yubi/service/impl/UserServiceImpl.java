@@ -1,17 +1,21 @@
 package com.yuxian.yubi.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.conditions.update.UpdateChainWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yuxian.yubi.constant.CommonConstant;
+import com.yuxian.yubi.constant.RedisConstant;
 import com.yuxian.yubi.enums.ErrorCode;
 import com.yuxian.yubi.enums.UserRoleEnum;
 import com.yuxian.yubi.exception.BusinessException;
+import com.yuxian.yubi.exception.ThrowUtils;
 import com.yuxian.yubi.mapper.UserMapper;
 import com.yuxian.yubi.model.dto.user.UserQueryRequest;
 import com.yuxian.yubi.model.entity.User;
 import com.yuxian.yubi.model.vo.LoginUserVO;
 import com.yuxian.yubi.model.vo.UserVO;
 import com.yuxian.yubi.service.UserService;
+import com.yuxian.yubi.utils.RedisUtils;
 import com.yuxian.yubi.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +23,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 import static com.yuxian.yubi.constant.UserConstant.USER_LOGIN_STATE;
@@ -73,6 +78,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             return user.getId();
         }
+    }
+    @Override
+    public boolean modifyUserChartAvailableNum(Long userId, Integer num) {
+        User user = query().eq("id", userId).one();
+        ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, String.format("不存在用户Id为 %s的用户", userId));
+        User updateUser = new User();
+        updateUser.setId(userId);
+        updateUser.setAvailableNum(user.getAvailableNum() + num);
+        return updateById(updateUser);
     }
 
     @Override

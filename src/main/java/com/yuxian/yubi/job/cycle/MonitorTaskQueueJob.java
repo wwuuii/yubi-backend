@@ -16,8 +16,8 @@ import java.util.concurrent.TimeUnit;
  * description: 监听任务队列的长度，动态调整核心线程数
  * @version 1.0
  **/
-//@Configuration
-//@ConfigurationProperties("monitor.queue")
+@Configuration
+@ConfigurationProperties("monitor.queue")
 @Data
 public class MonitorTaskQueueJob {
 
