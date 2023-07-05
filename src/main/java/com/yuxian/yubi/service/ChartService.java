@@ -29,4 +29,6 @@ public interface ChartService extends IService<Chart> {
 	 * @param status
 	 */
 	void updateChartStatus(Long id, Integer status);
+
+
 }

@@ -59,6 +59,7 @@ public class User implements Serializable {
      */
     private Date updateTime;
 
+    private Integer availableNum;
     /**
      * 是否删除
      */

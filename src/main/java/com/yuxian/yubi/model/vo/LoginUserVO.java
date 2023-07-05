@@ -27,6 +27,8 @@ public class LoginUserVO implements Serializable {
      */
     private String userAvatar;
 
+    private Integer availableNum;
+
 
     /**
      * 用户角色：user/admin/ban

@@ -57,6 +57,7 @@ public class BiMessageConsumer {
 		} catch (Exception e) {
 			channel.basicNack(deliveryTag,  false, false);
 			log.error("BiMessageConsumer.class  " + e.getMessage());
+			throw e;
 		}
 
 	}

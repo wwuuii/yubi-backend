@@ -37,9 +37,15 @@ public class BiDeadMessageConsumer {
 		if (StringUtils.isBlank(message)) {
 			channel.basicNack(deliveryTag, false, false);
 		}
-		Chart chart = getChartByBiMessage(message);
-		//更新图表分析状态
-		chartService.updateChartStatus(chart.getId(), ChartStatusEnum.FAILED.getCode());
+		try {
+			Chart chart = getChartByBiMessage(message);
+			//更新图表分析状态
+			chartService.updateChartStatus(chart.getId(), ChartStatusEnum.FAILED.getCode());
+			channel.basicAck(deliveryTag, false);
+		} catch (Exception e) {
+			channel.basicNack(deliveryTag, false, false);
+		}
+
 	}
 
 	public Chart getChartByBiMessage(String message) {
